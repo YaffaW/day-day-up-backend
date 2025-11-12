@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import users
+from app.routers import tasks
 from app.database import engine, Base
 import os
 
@@ -23,7 +24,8 @@ app.add_middleware(
 )
 
 # 注册路由
-app.include_router(users.router, prefix="/api/v1", tags=["users"])
+app.include_router(users.router, prefix="/api", tags=["users"])
+app.include_router(tasks.router, prefix="/api", tags=["tasks"])
 
 @app.get("/")
 def read_root():
