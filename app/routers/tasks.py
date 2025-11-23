@@ -103,23 +103,23 @@ def delete_task(task_id: str, db: Session = Depends(get_db)):
 
 @router.post("/schedule/", response_model=List[task_schemas.ScheduleRecordInDB])
 def get_schedule_data(query: task_schemas.ScheduleQuery, db: Session = Depends(get_db)):
+    print(f'query： {query}')
     """
     获取某一天或者某个时间段的时间表数据
     当前日期之前的记录不做修改，当前日期以及之后的，存在对应日期的，直接获取；
     不存在对应日期的，自动创建一条记录返回，创建的逻辑根据任务表的任务，自动填充对应重复日期的任务。
     """
     start_date = query.start_date
-    end_date = query.end_date or start_date  # 如果没有提供结束日期，则只查询开始日期当天的数据
+    end_date = query.end_date or start_date  # 如果没有提供结束日期，则只查询start_date当天的数据
     
     # 获取当前日期
     current_date = date_type.today()
-    
+
     # 查询在指定日期范围内已有的安排记录
     existing_records = db.query(models.ScheduleRecord).filter(
         and_(
             models.ScheduleRecord.date >= start_date,
-            models.ScheduleRecord.date <= end_date,
-            models.ScheduleRecord.status == "active"
+            models.ScheduleRecord.date <= end_date
         )
     ).all()
     
@@ -131,7 +131,7 @@ def get_schedule_data(query: task_schemas.ScheduleQuery, db: Session = Depends(g
         records_by_date[record.date].append(record)
     
     # 获取所有活跃任务
-    active_tasks = db.query(models.Task).filter(models.Task.status == "active").all()
+    active_tasks = db.query(models.Task).filter(models.Task.status == "active" and not models.Task.type == "regular").all()
     
     # 为日期范围内的每一天生成或获取安排记录
     result = []
@@ -143,66 +143,60 @@ def get_schedule_data(query: task_schemas.ScheduleQuery, db: Session = Depends(g
         if current_date_iter in records_by_date:
             for record in records_by_date[current_date_iter]:
                 result.append(record)
-        
-        # 获取当天需要根据任务规则自动创建的安排记录
-        if current_date_iter >= current_date:  # 只为今天及未来日期自动创建
-            # 根据重复任务规则创建安排
-            for task in active_tasks:
+        else:
+            # 如果当天没有任何任务匹配，并且是当前日期或未来日期，我们需要创建一个空记录
+            # 来表明这个日期已经处理过了
+            if current_date_iter >= current_date:  # 只为今天及未来日期自动创建
+                print(f'current_date: {current_date_iter}')
+                # 自动填充任务
                 should_add = False
-                
-                # 检查是否应该为当前日期添加此任务
-                if task.type == "regular":
-                    # regular类型任务只在特定日期添加
-                    if task.start_date and current_date_iter == task.start_date:
-                        should_add = True
-                elif task.type == "recurring":
-                    # recurring类型任务根据重复规则添加
-                    if (not task.start_date or current_date_iter >= task.start_date) and \
-                       (not task.end_date or current_date_iter <= task.end_date):
-                        if task.repeat_weekdays:
-                            try:
-                                repeat_days = json.loads(task.repeat_weekdays)
-                                # Python中星期一为0，星期天为6
-                                current_weekday = current_date_iter.weekday() + 1  # 转换为1-7格式（周一到周日）
-                                if current_weekday in repeat_days:
-                                    should_add = True
-                            except json.JSONDecodeError:
-                                # 如果解析失败，跳过此任务
-                                continue
-                elif task.type == "progress":
-                    # progress类型任务根据重复规则添加
-                    if (not task.start_date or current_date_iter >= task.start_date) and \
-                       (not task.end_date or current_date_iter <= task.end_date):
-                        if task.repeat_weekdays:
-                            try:
-                                repeat_days = json.loads(task.repeat_weekdays)
-                                current_weekday = current_date_iter.weekday() + 1  # 转换为1-7格式（周一到周日）
-                                if current_weekday in repeat_days:
-                                    should_add = True
-                            except json.JSONDecodeError:
-                                # 如果解析失败，跳过此任务
-                                continue
-                
-                # 检查这个任务在当天是否已存在安排
-                task_exists_today = any(
-                    record.task_id == task.id for record in records_by_date.get(current_date_iter, [])
-                )
-                
-                if should_add and not task_exists_today:
-                    # 创建新的日程安排记录
-                    new_record = models.ScheduleRecord(
-                        task_id=task.id,
+                for task in active_tasks:
+                    print(f'task: {vars(task)}')
+                    should_add = False
+
+                    # 检查是否应该为当前日期添加此任务
+                    match_task = task.type == "recurring" or task.type == "progress"
+                    match_date = (not task.start_date or current_date_iter >= task.start_date) and (not task.end_date or current_date_iter <= task.end_date)
+                    print(f'match_date: {match_date}, match_task: {match_task}')
+                    if match_task and match_date and task.repeat_weekdays:
+                        # recurring类型任务根据重复规则添加
+                        try:
+                            repeat_days = json.loads(task.repeat_weekdays)
+                            # Python中星期一为0，星期天为6
+                            current_weekday = current_date_iter.weekday() + 1  # 转换为1-7格式（周一到周日）
+                            if current_weekday in repeat_days:
+                                should_add = True
+                        except json.JSONDecodeError:
+                            # 如果解析失败，跳过此任务
+                            continue
+                    if should_add:
+                        # 创建新的日程安排记录
+                        new_record = models.ScheduleRecord(
+                            task_id=task.id,
+                            date=current_date_iter,
+                            start_time=task.start_time or time(9, 0),  # 默认9点
+                            end_time=task.end_time or time(10, 0),  # 默认10点
+                            title=task.title,
+                            theme_color=task.theme_color,
+                            is_completed=task.is_completed,
+                            description=task.description
+                        )
+                        db.add(new_record)
+                        result.append(new_record)
+                if not should_add:
+                    # 创建一个空记录来标记这个日期已经被处理
+                    empty_record = models.ScheduleRecord(
+                        task_id=None,  # 空记录，没有关联任务
                         date=current_date_iter,
-                        start_time=task.start_time or time(9, 0),  # 默认9点
-                        end_time=task.end_time or time(10, 0),    # 默认10点
-                        title=task.title,
-                        theme_color=task.theme_color,
-                        is_completed=task.is_completed,
-                        description=task.description
+                        start_time=time(0, 0),  # 默认0点
+                        end_time=time(0, 0),  # 默认0点
+                        title="空日程",  # 标记为"空日程"
+                        theme_color="#ffffff",  # 白色
+                        is_completed=False,
+                        description=f"{current_date_iter} 日程已处理"
                     )
-                    db.add(new_record)
-                    result.append(new_record)
-        
+                    db.add(empty_record)
+                    result.append(empty_record)
         current_date_iter += timedelta(days=1)
     
     # 提交可能的新创建的记录

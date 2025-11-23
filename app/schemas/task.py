@@ -33,8 +33,8 @@ class TaskUpdate(TaskBase):
 class TaskInDB(TaskBase):
     id: str
     status: str
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -61,32 +61,28 @@ class ScheduleRecordCreate(ScheduleRecordBase):
     pass
 
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import date, time, datetime
 import uuid
-from pydantic import ConfigDict
 
 
 class TaskBase(BaseModel):
     type: str
     title: str
-    theme_color: str
+    theme_color: str = Field(alias='themeColor')
     progress: Optional[int] = None
-    is_completed: Optional[bool] = False
+    is_completed: Optional[bool] = Field(default=False, alias='isCompleted')
     description: Optional[str] = None
-    repeat_weekdays: Optional[str] = None  # JSON格式存储数组
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    start_time: Optional[time] = None
-    end_time: Optional[time] = None
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        alias_generator=lambda field_name: ''.join(
-            word.capitalize() if i > 0 else word for i, word in enumerate(field_name.split('_'))
-        )
-    )
+    repeat_weekdays: Optional[str] = Field(default=None, alias='repeatWeekdays')
+    start_date: Optional[date] = Field(default=None, alias='startDate')
+    end_date: Optional[date] = Field(default=None, alias='endDate')
+    start_time: Optional[time] = Field(default=None, alias='startTime')
+    end_time: Optional[time] = Field(default=None, alias='endTime')
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
 
 
 class TaskCreate(TaskBase):
@@ -100,34 +96,27 @@ class TaskUpdate(TaskBase):
 class TaskInDB(TaskBase):
     id: str
     status: str
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
-    
-    model_config = ConfigDict(
-        from_attributes=True,
-        populate_by_name=True,
-        alias_generator=lambda field_name: ''.join(
-            word.capitalize() if i > 0 else word for i, word in enumerate(field_name.split('_'))
-        )
-    )
+    created_at: Optional[datetime] = Field(default=None, alias='createdAt')
+    updated_at: Optional[datetime] = Field(default=None, alias='updatedAt')
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
 
 
 class ScheduleRecordBase(BaseModel):
-    task_id: Optional[str] = None
+    task_id: Optional[str] = Field(default=None, alias='taskId')
     date: date
-    start_time: time
-    end_time: time
+    start_time: time = Field(alias='startTime')
+    end_time: time = Field(alias='endTime')
     title: str
-    theme_color: str
-    is_completed: Optional[bool] = False
+    theme_color: str = Field(alias='themeColor')
+    is_completed: Optional[bool] = Field(default=False, alias='isCompleted')
     description: Optional[str] = None
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        alias_generator=lambda field_name: ''.join(
-            word.capitalize() if i > 0 else word for i, word in enumerate(field_name.split('_'))
-        )
-    )
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
 
 
 class ScheduleRecordCreate(ScheduleRecordBase):
@@ -135,53 +124,43 @@ class ScheduleRecordCreate(ScheduleRecordBase):
 
 
 class ScheduleRecordUpdate(BaseModel):
-    start_time: Optional[time] = None
-    end_time: Optional[time] = None
+    start_time: Optional[time] = Field(default=None, alias='startTime')
+    end_time: Optional[time] = Field(default=None, alias='endTime')
     title: Optional[str] = None
-    theme_color: Optional[str] = None
-    is_completed: Optional[bool] = None
+    theme_color: Optional[str] = Field(default=None, alias='themeColor')
+    is_completed: Optional[bool] = Field(default=None, alias='isCompleted')
     description: Optional[str] = None
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        alias_generator=lambda field_name: ''.join(
-            word.capitalize() if i > 0 else word for i, word in enumerate(field_name.split('_'))
-        )
-    )
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
 
 
 class ScheduleRecordInDB(ScheduleRecordBase):
     id: str
     status: str
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
-    
-    model_config = ConfigDict(
-        from_attributes=True,
-        populate_by_name=True,
-        alias_generator=lambda field_name: ''.join(
-            word.capitalize() if i > 0 else word for i, word in enumerate(field_name.split('_'))
-        )
-    )
+    created_at: Optional[datetime] = Field(default=None, alias='createdAt')
+    updated_at: Optional[datetime] = Field(default=None, alias='updatedAt')
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
 
 
 class ScheduleQuery(BaseModel):
-    start_date: date
-    end_date: Optional[date] = None  # 如果不提供，则只查询start_date当天的数据
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        alias_generator=lambda field_name: ''.join(
-            word.capitalize() if i > 0 else word for i, word in enumerate(field_name.split('_'))
-        )
-    )
+    start_date: date = Field(alias='startDate')
+    end_date: Optional[date] = Field(default=None, alias='endDate')  # 如果不提供，则只查询start_date当天的数据
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
 
 
 class ScheduleRecordInDB(ScheduleRecordBase):
     id: str
     status: str
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
