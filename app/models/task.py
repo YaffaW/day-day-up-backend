@@ -7,17 +7,21 @@ from datetime import datetime
 
 
 class TaskType(enum.Enum):
+    __tablename__ = 'task_type'
     regular = "regular"
     recurring = "recurring"
     progress = "progress"
 
 
 class TaskStatus(enum.Enum):
+    __tablename__ = 'task_status'
     active = "active"
     deleted = "deleted"
 
 
 class ScheduleRecordStatus(enum.Enum):
+    __tablename__ = "schedule_record_status"
+
     active = "active"
     deleted = "deleted"
 

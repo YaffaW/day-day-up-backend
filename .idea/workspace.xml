@@ -7,6 +7,7 @@
     <list default="true" id="4f326581-5cd1-4b1d-9a01-3b2ea8fba3d9" name="Changes" comment="feat：任务接口初步调通">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.wucai/conversation.json" beforeDir="false" afterPath="$PROJECT_DIR$/.wucai/conversation.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/task.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/routers/tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/tasks.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/task.py" afterDir="false" />
     </list>
@@ -77,7 +78,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762959184501</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="feat：任务接口初步调通">
+      <option name="closed" value="true" />
+      <created>1763873905070</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1763873905070</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -104,7 +113,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/app/routers/tasks.py</url>
-          <line>160</line>
+          <line>155</line>
           <option name="timeStamp" value="11" />
         </line-breakpoint>
       </breakpoints>
